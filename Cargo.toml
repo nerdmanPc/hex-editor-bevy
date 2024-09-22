@@ -1,0 +1,12 @@
+[package]
+name = "hex-editor-bevy"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+alsa-sys = "0.3.1"
+bevy = "0.14.2"
+bevy_mod_picking = "0.20.1"
+emath = "0.28.1"
+float_eq = {version = "1.0.1", features = ["float_eq_derive"]}
+libudev-sys = "0.1.4"
