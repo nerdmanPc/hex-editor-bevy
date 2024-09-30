@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap, iter::Map, vec::IntoIter
+    collections::HashMap, iter::Map, vec::IntoIter, collections::hash_map::Keys, iter::Cloned,
 };
 use bevy::prelude::*;
 
@@ -74,6 +74,14 @@ impl Grid {
         fractional_coord.round()
     }
 
+    pub fn cell_coords<'a>(&'a self) -> Cloned<Keys<'_, Hex, Option<Entity>>>  {
+        self.data.keys().cloned()
+    }
+
+    pub fn world_coords_from_hex<'a>(&'a self, hex_coords: impl Into<Hex>) -> Point {
+        LayoutTool::hex_to_pixel(self.layout, hex_coords.into())
+    }
+
     pub fn build_mesh(&self) -> Vec<[f32;2]> {
         let cells = self.data.iter().map(|(hex, _entity)|{
 
@@ -112,7 +120,7 @@ impl Default for Grid {
     fn default() -> Self {
         let layout = Layout {
             orientation: LAYOUT_ORIENTATION_POINTY,
-            size: Point { x:0.1, y:0.1 }, 
+            size: Point { x:1.0, y:1.0 }, 
             origin: Point { x: 0.0, y: 0.0 },
         };
         let data = HashMap::new();
