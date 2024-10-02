@@ -47,6 +47,7 @@ pub struct Layout {
     pub orientation: Orientation,
     pub size: Point,
     pub origin: Point,
+    pub height: f64,
 }
 
 pub struct LayoutTool;

@@ -4,13 +4,13 @@ use std::{
 use bevy::prelude::*;
 
 mod hex_utils; pub use hex_utils::*;
+mod cell_entry; pub use cell_entry::*;
 
 //Stores layout and adjacency information
-#[derive(Resource)]
+#[derive(Resource, Clone, Debug)]
 pub struct Grid {
     layout: Layout,
-    data: HashMap<Hex, Option<Entity>>,
-    //rotation: [f32; 2],
+    data: HashMap<Hex, Cell>,
 }
 
 impl Grid {
@@ -47,34 +47,34 @@ impl Grid {
                 let s = -q-r;
                 if (-size <= s) && (s <= size) {
                     let key = center.add(Hex::new(q, r));
-                    self.data.insert(key, None);
+                    self.data.insert(key, Cell::default());
                 }
             }
         }
         self
     }
 
-    /*pub fn rotate(&mut self, amount: impl Into<[f32;2]>) {
-        let amount: [f32; 2] = amount.into();
-        self.rotation[0] += amount[0];
-        self.rotation[1] += amount[1];
-    }*/
-
-    pub fn set_entity(&mut self, cell: impl Into<Hex>, entity: Entity) {
-        self.data.insert(cell.into(), Some(entity));
+    pub fn set_entity(&mut self, cell_id: impl Into<Hex> + Clone, entity: Entity) {
+        let opt_cell = self.data.get_mut(&cell_id.clone().into());
+        if let Some(cell) = opt_cell {
+            cell.set_entity(entity);
+            return;
+        }
+        //let entity = Some(entity);
+        //self.data.insert(cell_id.into(), Cell::with_entity(entity));
     }
 
     pub fn delete_cell(&mut self, cell: impl Into<Hex>) {
         self.data.remove(&cell.into());
     }
 
-    pub fn sample_cell(&self, pos: impl Into<Point>) -> Hex {
+    pub fn _sample_cell(&self, pos: impl Into<Point>) -> Hex {
 
         let fractional_coord = LayoutTool::pixel_to_hex(self.layout, pos.into());
         fractional_coord.round()
     }
 
-    pub fn cell_coords<'a>(&'a self) -> Cloned<Keys<'_, Hex, Option<Entity>>>  {
+    pub fn cell_coords<'a>(&'a self) -> Cloned<Keys<'_, Hex, Cell>>  {
         self.data.keys().cloned()
     }
 
@@ -82,7 +82,20 @@ impl Grid {
         LayoutTool::hex_to_pixel(self.layout, hex_coords.into())
     }
 
-    pub fn build_mesh(&self) -> Vec<[f32;2]> {
+    pub fn world_cell_height(&self, cell_id: impl Into<Hex>) -> f64 {
+        let cell_id = cell_id.into();
+        self.data.get(&cell_id).expect("This is a bug!").height() as f64 * self.layout.height
+    }
+
+    pub fn increment_height(&mut self, cell_id: impl Into<Hex>, delta_height: i32) {
+        let cell_id = cell_id.into();
+        let cell = self.data.get_mut(&cell_id).expect("This is a bug!");
+        //print!("Cell height before: {}\n", cell.height);
+        cell.add_height(delta_height);
+        //print!("Cell height after: {}\n", cell.height);
+    }
+
+    pub fn _build_mesh(&self) -> Vec<[f32;2]> {
         let cells = self.data.iter().map(|(hex, _entity)|{
 
             let mut points = LayoutTool::polygon_corners(self.layout, *hex);
@@ -122,6 +135,7 @@ impl Default for Grid {
             orientation: LAYOUT_ORIENTATION_POINTY,
             size: Point { x:1.0, y:1.0 }, 
             origin: Point { x: 0.0, y: 0.0 },
+            height: 0.5,
         };
         let data = HashMap::new();
         Self {

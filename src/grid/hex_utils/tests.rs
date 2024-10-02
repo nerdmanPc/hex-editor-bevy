@@ -143,6 +143,7 @@ fn test_hex_layout() {
         orientation: LAYOUT_ORIENTATION_FLAT,
         size: Point { x: 10.0, y: 15.0 },
         origin: Point { x: 35.0, y: 71.0 },
+        height: 1.0,
     };
 
     let point_1 = LayoutTool::hex_to_pixel(flat, expected_hex);
@@ -153,6 +154,7 @@ fn test_hex_layout() {
         orientation: LAYOUT_ORIENTATION_POINTY,
         size: Point { x: 10.0, y: 15.0 },
         origin: Point { x: 35.0, y: 71.0 },
+        height: 1.0,
     };
 
     let point_2 = LayoutTool::hex_to_pixel(pointy, expected_hex);
