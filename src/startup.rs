@@ -8,7 +8,7 @@ use crate::CellTemplates;
 pub fn spawn_cells(mut commands: Commands, mut grid: ResMut<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
 
     let cell_coords: Vec<Hex> = grid.cell_coords().collect();
-    let mesh_handle = meshes.add(Sphere::new(1.0));
+    let mesh_handle = meshes.add(Sphere::new(0.5));
     let empty_material = materials.add(StandardMaterial {
         base_color: Color::linear_rgba(1.0, 1.0, 1.0, 0.0),
         alpha_mode: AlphaMode::AlphaToCoverage,
@@ -21,7 +21,7 @@ pub fn spawn_cells(mut commands: Commands, mut grid: ResMut<Grid>, mut meshes: R
 
     commands.insert_resource(CellTemplates{
         empty_material: empty_material.clone(),
-        filled_material,
+        filled_material: filled_material.clone(),
     });
 
     for cell_coord in cell_coords {
@@ -29,7 +29,7 @@ pub fn spawn_cells(mut commands: Commands, mut grid: ResMut<Grid>, mut meshes: R
         let mut spawn_commands = commands
             .spawn((PbrBundle {
                 mesh: mesh_handle.clone(),
-                material: empty_material.clone(),
+                material: filled_material.clone(),
                 transform: Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32),
                 ..default()
             },
@@ -66,8 +66,8 @@ pub fn spawn_light(mut commands: Commands) {
 }
 
 pub fn spawn_camera(mut commands: Commands) {
-    let transform = Transform::from_xyz(0.0, 7.0, 14.0)
-        .looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Y);
+    let transform = Transform::from_xyz(0.0, 7.0, 22.0)
+        .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
     commands.spawn(Camera3dBundle {
         transform,
         ..default()
