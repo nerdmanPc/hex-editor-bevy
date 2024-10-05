@@ -5,14 +5,12 @@ use bevy::prelude::*;
 
 mod hex_utils; pub use hex_utils::*;
 mod cell_entry; pub use cell_entry::*;
-use hexagon::FractionalHex;
 
 //Stores layout and adjacency information
 #[derive(Resource, Clone, Debug)]
 pub struct Grid {
     layout: Layout,
     terrain: HashMap<Hex, TerrainCell>,
-    //tiles: HashMap<FractionalHex, TerrainTile>
 }
 
 impl Grid {
@@ -53,7 +51,6 @@ impl Grid {
                 }
             }
         }
-        //TODO init 
         self
     }
 
@@ -81,7 +78,7 @@ impl Grid {
         self.terrain.keys().cloned()
     }
 
-    pub fn world_coords_from_hex<'a>(&'a self, hex_coords: impl Into<Hex>) -> Point {
+    pub fn hex_to_point<'a>(&'a self, hex_coords: impl Into<Hex>) -> Point {
         LayoutTool::hex_to_pixel(self.layout, hex_coords.into())
     }
 
@@ -98,28 +95,31 @@ impl Grid {
         //print!("Cell height after: {}\n", cell.height);
     }
 
-    pub fn _build_mesh(&self) -> Vec<[f32;2]> {
-        let cells = self.terrain.iter().map(|(hex, _entity)|{
+    pub fn hex_adjacent(hex: impl Into<Hex>, neighbor_id: u8) -> Hex {
+        if neighbor_id > 5 { panic!("Invalid hex neighbor!") }
+        let hex = hex.into();
+        HexDirection::neighbor(hex, neighbor_id as i32)
+    }
 
-            let mut points = LayoutTool::polygon_corners(self.layout, *hex);
-            points.push(points[0]);
-            let midpoint = points.iter().fold(Point{ x: 0.0, y: 0.0}, |acc, elem| { acc + *elem }) / points.len() as f64;
-            points.insert(0, midpoint);
-            let points: Vec<_> = points
-                .iter()
-                .map(|Point{x, y}| {[*x as f32, *y as f32]})
-                .collect();
-            points
-        });
-        let mesh = cells.reduce(|mut acc, mut item| {
-            acc.append(&mut item);
-            acc
-        });
-        if let Some(result) = mesh {
-            return result;
-        } else {
-            return Vec::new();
-        }
+    pub fn hex_direction(direction_id: u8) -> Hex {
+        if direction_id > 5 { panic!("Invalid direction!") }
+        HexDirection::direction(direction_id as i32)
+    }
+
+    pub fn tile_points(&self) -> [Point; 4] {
+        let hexes = [
+            Hex::new(0, 0),
+            Self::hex_direction(0),
+            Self::hex_direction(1),
+            Self::hex_direction(2),
+        ];
+        let points = [
+            LayoutTool::hex_to_pixel(self.layout, hexes[0]),
+            LayoutTool::hex_to_pixel(self.layout, hexes[1]),
+            LayoutTool::hex_to_pixel(self.layout, hexes[2]),
+            LayoutTool::hex_to_pixel(self.layout, hexes[3]),
+        ];
+        points
     }
 
     fn _polygon_corners(&self, key: Hex) -> Map<IntoIter<Point>, fn(Point)->[f32; 2]>{
@@ -141,11 +141,9 @@ impl Default for Grid {
             height: 0.25,
         };
         let terrain = HashMap::new();
-        //let tiles = HashMap::new();
         Self {
             layout,
             terrain,
-            //tiles,
         }
     }
 }

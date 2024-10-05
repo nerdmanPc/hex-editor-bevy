@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 
-
 #[derive(Clone, Copy, Debug)]
 pub struct TerrainCell {
     entity: Option<Entity>,
@@ -36,4 +35,10 @@ impl TerrainCell {
     pub fn height(&self) -> i32 {
         self.height
     }
+}
+
+pub enum ReliefType {
+    Flat,
+    Hill,
+    Cliff,
 }

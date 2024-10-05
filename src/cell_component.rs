@@ -54,3 +54,25 @@ impl CellComponent {
         erased
     }
 }
+
+#[derive(Component, Copy, Clone, Debug)]
+pub struct TileComponent{
+    hex_coord: Hex,
+    tile_id: u8,
+}
+
+impl Into<Hex> for TileComponent {
+    fn into(self) -> Hex {
+        self.hex_coord
+    }
+}
+
+impl TileComponent {
+    pub fn new(coords: impl Into<Hex>, tile_id: i32) -> Self {
+        let position = coords.into();
+        Self {
+            hex_coord: position,
+            tile_id: (tile_id % 2) as u8
+        }
+    }
+}

@@ -31,9 +31,10 @@ impl Plugin for EditorPlugin {
         app.insert_resource(empty_grid)
             .add_systems(Startup, (
                 spawn_cells,
+                spawn_tiles,
                 spawn_light,
                 spawn_camera,
-            ))
+            ).chain())
             .add_systems(Update, (paint_grid, rotate_camera));
     }
 }
