@@ -74,7 +74,7 @@ impl Grid {
         fractional_coord.round()
     }
 
-    pub fn cell_coords<'a>(&'a self) -> Cloned<Keys<'_, Hex, TerrainCell>>  {
+    pub fn cell_keys<'a>(&'a self) -> Cloned<Keys<'_, Hex, TerrainCell>>  {
         self.terrain.keys().cloned()
     }
 
@@ -104,6 +104,13 @@ impl Grid {
     pub fn hex_direction(direction_id: u8) -> Hex {
         if direction_id > 5 { panic!("Invalid direction!") }
         HexDirection::direction(direction_id as i32)
+    }
+
+    pub fn has_neighbor(&self, hex: impl Into<Hex>, neighbor_id: u8) -> bool {
+        if neighbor_id > 5 { panic!("Invalid hex neighbor!") }
+        let hex = hex.into();
+        let adjacent_key = HexDirection::neighbor(hex, neighbor_id as i32);
+        self.terrain.contains_key(&adjacent_key)
     }
 
     pub fn tile_points(&self) -> [Point; 4] {
