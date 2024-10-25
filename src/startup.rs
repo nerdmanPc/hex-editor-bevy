@@ -50,13 +50,13 @@ pub fn spawn_cells(mut commands: Commands, mut grid: ResMut<Grid>, mut meshes: R
             }));
         
         let entiy = spawn_commands.id();
-        grid.set_entity(cell_key, entiy);
+        //grid.set_entity(cell_key, entiy);
     }
 }
 
 pub fn spawn_tiles(mut commands: Commands, grid: ResMut<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
 
-    let filled_material = materials.add(StandardMaterial {
+    let material = materials.add(StandardMaterial {
         base_color: Color::WHITE,
         ..default()
     });
@@ -64,50 +64,41 @@ pub fn spawn_tiles(mut commands: Commands, grid: ResMut<Grid>, mut meshes: ResMu
     let tile_points: Vec<Vec3> = tile_points.into_iter().map(|point| {
         Vec3 { x:point.x as f32, y:0.0, z:point.y as f32 }
     }).collect();
-    let triangle_a = vec![
-        0, 1, 2,
-    ];
-    let triangle_b = vec![
-        0, 2, 3,
-    ];
+
+    let triangle_a = vec![0, 1, 2];
+    let neighbors_a = [0, 1];
     let mesh_a = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD)
         .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, tile_points.clone())
         .with_inserted_indices(Indices::U16(triangle_a))
         .with_computed_normals();
     let mesh_a = meshes.add(mesh_a);
+    spawn_tile_group(&mut commands, &grid, material.clone(), mesh_a, neighbors_a, 0);
+
+    let triangle_b = vec![0, 2, 3];
+    let neighbors_b = [1, 2];
     let mesh_b = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD)
         .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, tile_points)
         .with_inserted_indices(Indices::U16(triangle_b))
         .with_computed_normals();
     let mesh_b = meshes.add(mesh_b);
+    spawn_tile_group(&mut commands, &grid, material, mesh_b, neighbors_b, 1);
 
+}
+
+fn spawn_tile_group(commands: &mut Commands, grid: &ResMut<Grid>, material: Handle<StandardMaterial>, mesh: Handle<Mesh>, neighbors: [u8; 2], tile_id: i32) {
     for cell_key in grid.cell_keys() {
         let world_coord = grid.hex_to_point(cell_key);
-        let has_tile_neighbors = grid.has_neighbor(cell_key, 0) && grid.has_neighbor(cell_key, 1);
+        let has_tile_neighbors = grid.has_neighbor(cell_key, neighbors[0]) && grid.has_neighbor(cell_key, neighbors[1]);
         if !has_tile_neighbors { continue; }
         commands.spawn((PbrBundle {
-                mesh: mesh_a.clone(),
-                material: filled_material.clone(),
+                mesh: mesh.clone(),
+                material: material.clone(),
                 transform: Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32),
                 ..default()
             },
-            TileComponent::new(cell_key, 0)
+            TileComponent::new(cell_key, tile_id)
         ));
     }
-    for cell_key in grid.cell_keys() {
-        let world_coord = grid.hex_to_point(cell_key);
-        let has_tile_neighbors = grid.has_neighbor(cell_key, 1) && grid.has_neighbor(cell_key, 2);
-        if !has_tile_neighbors { continue; }
-        commands.spawn((PbrBundle {
-                mesh: mesh_b.clone(),
-                material: filled_material.clone(),
-                transform: Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32),
-                ..default()
-            },
-            TileComponent::new(cell_key, 0)
-        ));
-    }
-
 }
 
 pub fn spawn_light(mut commands: Commands) {

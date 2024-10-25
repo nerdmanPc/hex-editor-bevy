@@ -27,7 +27,7 @@ pub struct EditorPlugin;
 impl Plugin for EditorPlugin {
     fn build(&self, app: &mut App) {
         let mut empty_grid = Grid::default();
-        empty_grid.make_hex([0, 0], 8); 
+        empty_grid.make_hex([0, 0], 5); 
         app.insert_resource(empty_grid)
             .add_systems(Startup, (
                 spawn_cells,

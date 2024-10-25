@@ -54,15 +54,15 @@ impl Grid {
         self
     }
 
-    pub fn set_entity(&mut self, cell_id: impl Into<Hex> + Clone, entity: Entity) {
-        let opt_cell = self.terrain.get_mut(&cell_id.clone().into());
-        if let Some(cell) = opt_cell {
-            cell.set_entity(entity);
-            return;
-        }
-        //let entity = Some(entity);
-        //self.data.insert(cell_id.into(), Cell::with_entity(entity));
-    }
+    //pub fn set_entity(&mut self, cell_id: impl Into<Hex> + Clone, entity: Entity) {
+    //    let opt_cell = self.terrain.get_mut(&cell_id.clone().into());
+    //    if let Some(cell) = opt_cell {
+    //        cell.set_entity(entity);
+    //        return;
+    //    }
+    //    //let entity = Some(entity);
+    //    //self.data.insert(cell_id.into(), Cell::with_entity(entity));
+    //}
 
     pub fn _delete_cell(&mut self, cell: impl Into<Hex>) {
         self.terrain.remove(&cell.into());
@@ -145,7 +145,7 @@ impl Default for Grid {
             orientation: LAYOUT_ORIENTATION_POINTY,
             size: Point { x:1.0, y:1.0 }, 
             origin: Point { x: 0.0, y: 0.0 },
-            height: 0.25,
+            height: 0.5,
         };
         let terrain = HashMap::new();
         Self {
