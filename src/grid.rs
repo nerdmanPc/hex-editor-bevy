@@ -10,18 +10,18 @@ mod cell_entry; pub use cell_entry::*;
 #[derive(Resource, Clone, Debug)]
 pub struct Grid {
     layout: Layout,
-    terrain: HashMap<Hex, TerrainCell>,
+    cells: HashMap<Hex, TerrainCell>,
 }
 
 impl Grid {
 
-    /*pub fn _make_rhombus(min: impl Into<Hex>, max: impl Into<Hex>) -> Self {
+    pub fn _make_rhombus(min: impl Into<Hex>, max: impl Into<Hex>) -> Self {
         let (min, max): (Hex, Hex) = (min.into(), max.into());
         let mut instance = Self::default();
         for q in min.q() ..= max.q() {
             for r in min.r() ..= max.r() {
                 let key = Hex::new(q, r);
-                instance.data.insert(key, None);
+                instance.cells.insert(key, TerrainCell::default());
             }
         }
         instance
@@ -33,11 +33,11 @@ impl Grid {
         for q in min.q() ..=  min.q() + size {
             for r in min.r() ..= min.r() + size - q {
                 let key = Hex::new(q, r);
-                instance.data.insert(key, None);
+                instance.cells.insert(key, TerrainCell::default());
             }
         }
         instance
-    }*/
+    }
 
     pub fn make_hex(&mut self, center: impl Into<Hex>, size: i32) -> &mut Self {
         let center: Hex = center.into();
@@ -47,7 +47,7 @@ impl Grid {
                 let s = -q-r;
                 if (-size <= s) && (s <= size) {
                     let key = center.add(Hex::new(q, r));
-                    self.terrain.insert(key, TerrainCell::default());
+                    self.cells.insert(key, TerrainCell::default());
                 }
             }
         }
@@ -65,7 +65,7 @@ impl Grid {
     //}
 
     pub fn _delete_cell(&mut self, cell: impl Into<Hex>) {
-        self.terrain.remove(&cell.into());
+        self.cells.remove(&cell.into());
     }
 
     pub fn _sample_cell(&self, pos: impl Into<Point>) -> Hex {
@@ -75,7 +75,7 @@ impl Grid {
     }
 
     pub fn cell_keys<'a>(&'a self) -> Cloned<Keys<'_, Hex, TerrainCell>>  {
-        self.terrain.keys().cloned()
+        self.cells.keys().cloned()
     }
 
     pub fn hex_to_point<'a>(&'a self, hex_coords: impl Into<Hex>) -> Point {
@@ -84,18 +84,18 @@ impl Grid {
 
     pub fn world_cell_height(&self, cell_id: impl Into<Hex>) -> f64 {
         let cell_id = cell_id.into();
-        self.terrain.get(&cell_id).expect("This is a bug!").height() as f64 * self.layout.height
+        self.cells.get(&cell_id).expect("This is a bug!").height() as f64 * self.layout.height
     }
 
     pub fn increment_height(&mut self, cell_id: impl Into<Hex>, delta_height: i32) {
         let cell_id = cell_id.into();
-        let cell = self.terrain.get_mut(&cell_id).expect("This is a bug!");
+        let cell = self.cells.get_mut(&cell_id).expect("This is a bug!");
         //print!("Cell height before: {}\n", cell.height);
         cell.add_height(delta_height);
         //print!("Cell height after: {}\n", cell.height);
     }
 
-    pub fn hex_adjacent(hex: impl Into<Hex>, neighbor_id: u8) -> Hex {
+    pub fn _hex_adjacent(hex: impl Into<Hex>, neighbor_id: u8) -> Hex {
         if neighbor_id > 5 { panic!("Invalid hex neighbor!") }
         let hex = hex.into();
         HexDirection::neighbor(hex, neighbor_id as i32)
@@ -110,7 +110,7 @@ impl Grid {
         if neighbor_id > 5 { panic!("Invalid hex neighbor!") }
         let hex = hex.into();
         let adjacent_key = HexDirection::neighbor(hex, neighbor_id as i32);
-        self.terrain.contains_key(&adjacent_key)
+        self.cells.contains_key(&adjacent_key)
     }
 
     pub fn tile_points(&self) -> [Point; 4] {
@@ -150,7 +150,7 @@ impl Default for Grid {
         let terrain = HashMap::new();
         Self {
             layout,
-            terrain,
+            cells: terrain,
         }
     }
 }

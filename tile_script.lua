@@ -2,6 +2,7 @@ bitmask =
   DownRightTerrain * 1 +
   UpRightTerrain * 3 +
   LeftTerrain * 9;
+
 table = [
   {tileIndex: 0, rotation: 0},
   {tileIndex: 1, rotation: 0},
