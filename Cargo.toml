@@ -5,8 +5,10 @@ edition = "2021"
 
 [dependencies]
 alsa-sys = "0.3.1"
-bevy = "0.14.2"
+bevy = "0.14.*"
+bevy_egui = "0.32.0"
 bevy_mod_picking = "0.20.1"
-emath = "0.29"
+emath = "0.29.*"
 float_eq = {version = "1.0.1", features = ["float_eq_derive"]}
+hexx = { version = "0.20.0", features = ["algorithms", "grid", "mesh", "bevy_reflect"]}
 libudev-sys = "0.1.4"

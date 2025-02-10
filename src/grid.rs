@@ -1,15 +1,21 @@
 use std::{
-    collections::HashMap, iter::Map, vec::IntoIter, collections::hash_map::Keys, iter::Cloned,
+    collections::HashMap, collections::hash_map::Keys, iter::Cloned,
 };
-use bevy::prelude::*;
+use bevy::prelude::Resource;
+pub use hexx::{
+    Vec2,
+    Hex
+};
+use hexx::*;
 
-mod hex_utils; pub use hex_utils::*;
+//mod hex_utils; pub use hex_utils::*;
 mod cell_entry; pub use cell_entry::*;
 
 //Stores layout and adjacency information
 #[derive(Resource, Clone, Debug)]
 pub struct Grid {
-    layout: Layout,
+    layout: HexLayout,
+    height: f32,
     cells: HashMap<Hex, TerrainCell>,
 }
 
@@ -18,8 +24,8 @@ impl Grid {
     pub fn _make_rhombus(min: impl Into<Hex>, max: impl Into<Hex>) -> Self {
         let (min, max): (Hex, Hex) = (min.into(), max.into());
         let mut instance = Self::default();
-        for q in min.q() ..= max.q() {
-            for r in min.r() ..= max.r() {
+        for q in min.x ..= max.x {
+            for r in min.y ..= max.y {
                 let key = Hex::new(q, r);
                 instance.cells.insert(key, TerrainCell::default());
             }
@@ -30,8 +36,8 @@ impl Grid {
     pub fn _make_triangle(min: impl Into<Hex>, size: i32) -> Self {
         let min: Hex = min.into();
         let mut instance = Self::default();
-        for q in min.q() ..=  min.q() + size {
-            for r in min.r() ..= min.r() + size - q {
+        for q in min.x ..=  min.x + size {
+            for r in min.y ..= min.y + size - q {
                 let key = Hex::new(q, r);
                 instance.cells.insert(key, TerrainCell::default());
             }
@@ -46,7 +52,7 @@ impl Grid {
             for r in -size ..= size {
                 let s = -q-r;
                 if (-size <= s) && (s <= size) {
-                    let key = center.add(Hex::new(q, r));
+                    let key = center + Hex::new(q, r);
                     self.cells.insert(key, TerrainCell::default());
                 }
             }
@@ -54,37 +60,21 @@ impl Grid {
         self
     }
 
-    //pub fn set_entity(&mut self, cell_id: impl Into<Hex> + Clone, entity: Entity) {
-    //    let opt_cell = self.terrain.get_mut(&cell_id.clone().into());
-    //    if let Some(cell) = opt_cell {
-    //        cell.set_entity(entity);
-    //        return;
-    //    }
-    //    //let entity = Some(entity);
-    //    //self.data.insert(cell_id.into(), Cell::with_entity(entity));
-    //}
-
     pub fn _delete_cell(&mut self, cell: impl Into<Hex>) {
         self.cells.remove(&cell.into());
     }
 
-    pub fn _sample_cell(&self, pos: impl Into<Point>) -> Hex {
-
-        let fractional_coord = LayoutTool::pixel_to_hex(self.layout, pos.into());
-        fractional_coord.round()
-    }
-
-    pub fn cell_keys<'a>(&'a self) -> Cloned<Keys<'_, Hex, TerrainCell>>  {
+    pub fn cell_keys<'a>(&'a self) -> Cloned<Keys<'a, Hex, TerrainCell>>  {
         self.cells.keys().cloned()
     }
 
-    pub fn hex_to_point<'a>(&'a self, hex_coords: impl Into<Hex>) -> Point {
-        LayoutTool::hex_to_pixel(self.layout, hex_coords.into())
+    pub fn hex_to_point<'a>(&'a self, hex_coords: impl Into<Hex>) -> Vec2 {
+        self.layout.hex_to_world_pos(hex_coords.into())
     }
 
-    pub fn world_cell_height(&self, cell_id: impl Into<Hex>) -> f64 {
+    pub fn world_cell_height(&self, cell_id: impl Into<Hex>) -> f32 {
         let cell_id = cell_id.into();
-        self.cells.get(&cell_id).expect("This is a bug!").height() as f64 * self.layout.height
+        self.cells.get(&cell_id).expect("This is a bug!").height() as f32 * self.height
     }
 
     pub fn increment_height(&mut self, cell_id: impl Into<Hex>, delta_height: i32) {
@@ -95,25 +85,27 @@ impl Grid {
         //print!("Cell height after: {}\n", cell.height);
     }
 
-    pub fn _hex_adjacent(hex: impl Into<Hex>, neighbor_id: u8) -> Hex {
+    pub fn hex_adjacent(hex: impl Into<Hex>, neighbor_id: u8) -> Hex {
         if neighbor_id > 5 { panic!("Invalid hex neighbor!") }
         let hex = hex.into();
-        HexDirection::neighbor(hex, neighbor_id as i32)
+        hex + Self::hex_direction(neighbor_id)
+        //HexDirection::neighbor(hex, neighbor_id as i32)
     }
 
     pub fn hex_direction(direction_id: u8) -> Hex {
         if direction_id > 5 { panic!("Invalid direction!") }
-        HexDirection::direction(direction_id as i32)
+        EdgeDirection::ALL_DIRECTIONS[direction_id as usize].into()
+        //HexDirection::direction(direction_id as i32)
     }
 
     pub fn has_neighbor(&self, hex: impl Into<Hex>, neighbor_id: u8) -> bool {
         if neighbor_id > 5 { panic!("Invalid hex neighbor!") }
         let hex = hex.into();
-        let adjacent_key = HexDirection::neighbor(hex, neighbor_id as i32);
+        let adjacent_key = Self::hex_adjacent(hex, neighbor_id);//HexDirection::neighbor(hex, neighbor_id as i32);
         self.cells.contains_key(&adjacent_key)
     }
 
-    pub fn tile_points(&self) -> [Point; 4] {
+    pub fn tile_points(&self) -> [Vec2; 4] {
         let hexes = [
             Hex::new(0, 0),
             Self::hex_direction(0),
@@ -121,35 +113,35 @@ impl Grid {
             Self::hex_direction(2),
         ];
         let points = [
-            LayoutTool::hex_to_pixel(self.layout, hexes[0]),
-            LayoutTool::hex_to_pixel(self.layout, hexes[1]),
-            LayoutTool::hex_to_pixel(self.layout, hexes[2]),
-            LayoutTool::hex_to_pixel(self.layout, hexes[3]),
+            self.hex_to_point(hexes[0]),
+            self.hex_to_point(hexes[1]),
+            self.hex_to_point(hexes[2]),
+            self.hex_to_point(hexes[3]),
         ];
         points
     }
 
-    fn _polygon_corners(&self, key: Hex) -> Map<IntoIter<Point>, fn(Point)->[f32; 2]>{
+    /*fn _polygon_corners(&self, key: Hex) -> Map<IntoIter<Vec2>, fn(Vec2)->[f32; 2]>{
 
-        let convert_point: fn(Point) -> [f32; 2] = |point: Point| {
+        let convert_point: fn(Vec2) -> [f32; 2] = |point: Vec2| {
             [point.x as f32, point.y as f32]
         };
         LayoutTool::polygon_corners(self.layout, key).into_iter().map(convert_point)
-    }
+    }*/
 }
 
 
 impl Default for Grid {
     fn default() -> Self {
-        let layout = Layout {
-            orientation: LAYOUT_ORIENTATION_POINTY,
-            size: Point { x:1.0, y:1.0 }, 
-            origin: Point { x: 0.0, y: 0.0 },
-            height: 0.5,
+        let layout = HexLayout {
+            orientation: HexOrientation::Pointy,
+            scale: Vec2::new(1.0, 1.0), 
+            ..Default::default()
         };
         let terrain = HashMap::new();
         Self {
             layout,
+            height: 0.5,
             cells: terrain,
         }
     }
