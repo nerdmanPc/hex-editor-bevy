@@ -7,8 +7,6 @@ pub use hexx::{
     Hex
 };
 use hexx::*;
-
-//mod hex_utils; pub use hex_utils::*;
 mod cell_entry; pub use cell_entry::*;
 
 //Stores layout and adjacency information

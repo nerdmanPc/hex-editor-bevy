@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_mod_picking::prelude::*;
+//use bevy_mod_picking::prelude::*;
 
 mod startup_systems; use startup_systems::*;
 mod update_systems; use update_systems::*;
@@ -12,7 +12,7 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            DefaultPickingPlugins,
+            MeshPickingPlugin,
             EditorPlugin,
         )).run();
 }
@@ -32,7 +32,6 @@ impl Plugin for EditorPlugin {
         app.insert_resource(empty_grid)
             .add_systems(Startup, (
                 spawn_cells,
-                spawn_tiles,
                 spawn_light,
                 spawn_camera,
             ).chain())

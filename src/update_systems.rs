@@ -22,6 +22,19 @@ pub fn paint_grid(mut grid: ResMut<Grid>, mut query: Query<(&mut CellComponent, 
     }
 }
 
+pub fn on_click_cell(click: Trigger<Pointer<Click>>, mut query: Query<&mut CellComponent>) {
+    let query_result = query.get_mut(click.entity());
+    if query_result.is_err() {
+        return;
+    }
+    let mut grid_cell = query_result.unwrap();
+    match click.button {
+        PointerButton::Primary => { grid_cell.on_click(); }
+        PointerButton::Secondary => { grid_cell.on_right_click(); }
+        _ => {}
+    }
+}
+
 pub fn rotate_camera(input: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Transform, With<Camera3d>>) {
     let rotate_left = input.just_pressed(KeyCode::ArrowLeft) as i32 as f32;
     let rotate_right = input.just_pressed(KeyCode::ArrowRight) as i32 as f32;

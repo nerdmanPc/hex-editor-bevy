@@ -2,10 +2,11 @@ use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::mesh::PrimitiveTopology;
 use bevy::render::render_asset::RenderAssetUsages;
-use bevy_mod_picking::prelude::*;
+//use bevy_mod_picking::prelude::*;
 
 use crate::grid::*;
 use crate::components::*;
+use crate::update_systems::*;
 use crate::CellTemplates;
 
 pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
@@ -29,26 +30,12 @@ pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<A
     let cell_keys: Vec<Hex> = grid.cell_keys().collect();
     for cell_key in cell_keys {
         let world_coord = grid.hex_to_point(cell_key);
+        let transform = Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32);
+        let cell_component = CellComponent::with_coords(cell_key);
         let mut spawn_commands = commands
-            .spawn((
-                PbrBundle {
-                    mesh: mesh_handle.clone(),
-                    material: filled_material.clone(),
-                    transform: Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32),
-                    ..default()
-                },
-                CellComponent::with_coords(cell_key),
-                //PickableBundle::default(),
-        ));
+            .spawn((transform, cell_component, MeshMaterial3d(filled_material.clone()), Mesh3d(mesh_handle.clone())));
 
-        spawn_commands
-            .insert(On::<Pointer<Click>>::target_component_mut::<CellComponent>(|click, grid_cell|{
-                match click.button {
-                    PointerButton::Primary => { grid_cell.on_click(); }
-                    PointerButton::Secondary => { grid_cell.on_right_click(); }
-                    _ => {}
-                }
-            }));
+        spawn_commands.observe(on_click_cell);
         
         //let entiy = spawn_commands.id();
         //grid.set_entity(cell_key, entiy);
@@ -74,7 +61,7 @@ pub fn spawn_tiles(mut commands: Commands, grid: ResMut<Grid>, mut meshes: ResMu
         .with_inserted_indices(Indices::U16(triangle_a))
         .with_computed_normals();
     let mesh_a = meshes.add(mesh_a);
-    spawn_tile_group(&mut commands, &grid, material.clone(), mesh_a, neighbors_a, 0);
+    spawn_tile_group(&mut commands, &grid, MeshMaterial3d(material.clone()), Mesh3d(mesh_a), neighbors_a, 0);
 
     let triangle_b = vec![0, 2, 3];
     let neighbors_b = [1, 2];
@@ -83,45 +70,35 @@ pub fn spawn_tiles(mut commands: Commands, grid: ResMut<Grid>, mut meshes: ResMu
         .with_inserted_indices(Indices::U16(triangle_b))
         .with_computed_normals();
     let mesh_b = meshes.add(mesh_b);
-    spawn_tile_group(&mut commands, &grid, material, mesh_b, neighbors_b, 1);
+    spawn_tile_group(&mut commands, &grid, MeshMaterial3d(material), Mesh3d(mesh_b), neighbors_b, 1);
 
 }
 
-fn spawn_tile_group(commands: &mut Commands, grid: &ResMut<Grid>, material: Handle<StandardMaterial>, mesh: Handle<Mesh>, neighbors: [u8; 2], tile_id: i32) {
+fn spawn_tile_group(commands: &mut Commands, grid: &ResMut<Grid>, material: MeshMaterial3d<StandardMaterial>, mesh: Mesh3d, neighbors: [u8; 2], tile_id: i32) {
     for cell_key in grid.cell_keys() {
         let world_coord = grid.hex_to_point(cell_key);
         let has_tile_neighbors = grid.has_neighbor(cell_key, neighbors[0]) && grid.has_neighbor(cell_key, neighbors[1]);
         if !has_tile_neighbors { continue; }
-        commands.spawn((PbrBundle {
-                mesh: mesh.clone(),
-                material: material.clone(),
-                transform: Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32),
-                ..default()
-            },
-            TileComponent::new(cell_key, tile_id)
-        ));
+        let transform = Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32);
+        let tile_component = TileComponent::new(cell_key, tile_id);
+        commands.spawn((mesh.clone(), material.clone(), transform, tile_component));
     }
 }
 
 pub fn spawn_light(mut commands: Commands) {
-    commands.spawn(PointLightBundle {
-        point_light: PointLight {
-            shadows_enabled: true,
-            intensity: 10_000_000.,
-            range: 100.0,
-            shadow_depth_bias: 0.2,
-            ..default()
-        },
-        transform: Transform::from_xyz(8.0, 16.0, 8.0),
+    let point_light = PointLight {
+        shadows_enabled: true,
+        intensity: 10_000_000.,
+        range: 100.0,
+        shadow_depth_bias: 0.2,
         ..default()
-    });
+    };
+    let transform = Transform::from_xyz(8.0, 16.0, 8.0);
+    commands.spawn((point_light, transform));
 }
 
 pub fn spawn_camera(mut commands: Commands) {
     let transform = Transform::from_xyz(0.0, 7.0, 22.0)
         .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
-    commands.spawn(Camera3dBundle {
-        transform,
-        ..default()
-    });
+    commands.spawn((Camera3d::default(), transform));
 }
