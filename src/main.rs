@@ -19,8 +19,8 @@ fn main() {
 
 #[derive(Resource)]
 struct CellTemplates {
-    pub empty_material: Handle<StandardMaterial>,
-    pub filled_material: Handle<StandardMaterial>,
+    pub default_material: Handle<StandardMaterial>,
+    pub hovered_material: Handle<StandardMaterial>,
 }
 
 pub struct EditorPlugin;
@@ -35,6 +35,6 @@ impl Plugin for EditorPlugin {
                 spawn_light,
                 spawn_camera,
             ).chain())
-            .add_systems(Update, (paint_grid, rotate_camera));
+            .add_systems(Update,  rotate_camera);
     }
 }

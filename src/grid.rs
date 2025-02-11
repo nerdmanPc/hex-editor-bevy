@@ -103,7 +103,7 @@ impl Grid {
         self.cells.contains_key(&adjacent_key)
     }
 
-    pub fn tile_points(&self) -> [Vec2; 4] {
+    /*pub fn tile_points(&self) -> [Vec2; 4] {
         let hexes = [
             Hex::new(0, 0),
             Self::hex_direction(0),
@@ -117,7 +117,7 @@ impl Grid {
             self.hex_to_point(hexes[3]),
         ];
         points
-    }
+    }*/
 
     /*fn _polygon_corners(&self, key: Hex) -> Map<IntoIter<Vec2>, fn(Vec2)->[f32; 2]>{
 

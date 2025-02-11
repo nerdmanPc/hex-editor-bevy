@@ -1,8 +1,7 @@
 use bevy::prelude::*;
-use bevy::render::mesh::Indices;
-use bevy::render::mesh::PrimitiveTopology;
-use bevy::render::render_asset::RenderAssetUsages;
-//use bevy_mod_picking::prelude::*;
+//use bevy::render::mesh::Indices;
+//use bevy::render::mesh::PrimitiveTopology;
+//use bevy::render::render_asset::RenderAssetUsages;
 
 use crate::grid::*;
 use crate::components::*;
@@ -12,19 +11,19 @@ use crate::CellTemplates;
 pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
 
     let mesh_handle = meshes.add(Sphere::new(0.5));
-    let empty_material = materials.add(StandardMaterial {
+    let default_material = materials.add(StandardMaterial {
         base_color: Color::linear_rgba(1.0, 1.0, 1.0, 0.0),
         alpha_mode: AlphaMode::AlphaToCoverage,
         ..default()
     });
-    let filled_material = materials.add(StandardMaterial {
+    let hovered_material = materials.add(StandardMaterial {
         base_color: Color::WHITE,
         ..default()
     });
     
     commands.insert_resource(CellTemplates{
-        empty_material: empty_material.clone(),
-        filled_material: filled_material.clone(),
+        default_material: default_material.clone(),
+        hovered_material: hovered_material.clone(),
     });
     
     let cell_keys: Vec<Hex> = grid.cell_keys().collect();
@@ -33,16 +32,16 @@ pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<A
         let transform = Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32);
         let cell_component = CellComponent::with_coords(cell_key);
         let mut spawn_commands = commands
-            .spawn((transform, cell_component, MeshMaterial3d(filled_material.clone()), Mesh3d(mesh_handle.clone())));
+            .spawn((transform, cell_component, MeshMaterial3d(hovered_material.clone()), Mesh3d(mesh_handle.clone())));
 
-        spawn_commands.observe(on_click_cell);
+        spawn_commands.observe(paint_grid);
         
         //let entiy = spawn_commands.id();
         //grid.set_entity(cell_key, entiy);
     }
 }
 
-pub fn spawn_tiles(mut commands: Commands, grid: ResMut<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+/*pub fn spawn_tiles(mut commands: Commands, grid: ResMut<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
 
     let material = materials.add(StandardMaterial {
         base_color: Color::WHITE,
@@ -72,9 +71,9 @@ pub fn spawn_tiles(mut commands: Commands, grid: ResMut<Grid>, mut meshes: ResMu
     let mesh_b = meshes.add(mesh_b);
     spawn_tile_group(&mut commands, &grid, MeshMaterial3d(material), Mesh3d(mesh_b), neighbors_b, 1);
 
-}
+}*/
 
-fn spawn_tile_group(commands: &mut Commands, grid: &ResMut<Grid>, material: MeshMaterial3d<StandardMaterial>, mesh: Mesh3d, neighbors: [u8; 2], tile_id: i32) {
+/*fn spawn_tile_group(commands: &mut Commands, grid: &ResMut<Grid>, material: MeshMaterial3d<StandardMaterial>, mesh: Mesh3d, neighbors: [u8; 2], tile_id: i32) {
     for cell_key in grid.cell_keys() {
         let world_coord = grid.hex_to_point(cell_key);
         let has_tile_neighbors = grid.has_neighbor(cell_key, neighbors[0]) && grid.has_neighbor(cell_key, neighbors[1]);
@@ -83,7 +82,7 @@ fn spawn_tile_group(commands: &mut Commands, grid: &ResMut<Grid>, material: Mesh
         let tile_component = TileComponent::new(cell_key, tile_id);
         commands.spawn((mesh.clone(), material.clone(), transform, tile_component));
     }
-}
+}*/
 
 pub fn spawn_light(mut commands: Commands) {
     let point_light = PointLight {
