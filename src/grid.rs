@@ -4,7 +4,8 @@ use std::{
 use bevy::prelude::Resource;
 pub use hexx::{
     Vec2,
-    Hex
+    Hex,
+    MeshInfo,
 };
 use hexx::*;
 mod cell_entry; pub use cell_entry::*;
@@ -103,6 +104,13 @@ impl Grid {
         self.cells.contains_key(&adjacent_key)
     }
 
+    pub fn cell_mesh(&self) -> MeshInfo {
+        ColumnMeshBuilder::new(&self.layout, 32.0 * self.height)
+            .without_bottom_face()
+            .with_offset(Vec3 { x: 0.0, y: -32.0 * self.height, z: 0.0 })
+            .build()
+    }
+
     /*pub fn tile_points(&self) -> [Vec2; 4] {
         let hexes = [
             Hex::new(0, 0),
@@ -117,14 +125,6 @@ impl Grid {
             self.hex_to_point(hexes[3]),
         ];
         points
-    }*/
-
-    /*fn _polygon_corners(&self, key: Hex) -> Map<IntoIter<Vec2>, fn(Vec2)->[f32; 2]>{
-
-        let convert_point: fn(Vec2) -> [f32; 2] = |point: Vec2| {
-            [point.x as f32, point.y as f32]
-        };
-        LayoutTool::polygon_corners(self.layout, key).into_iter().map(convert_point)
     }*/
 }
 

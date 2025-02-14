@@ -1,7 +1,9 @@
 use bevy::prelude::*;
+use bevy_panorbit_camera::PanOrbitCameraPlugin;
 //use bevy_mod_picking::prelude::*;
 
-mod startup_systems; use startup_systems::*;
+mod startup_systems; 
+use startup_systems::*;
 mod update_systems; use update_systems::*;
 mod grid; use grid::*;
 
@@ -13,6 +15,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             MeshPickingPlugin,
+            PanOrbitCameraPlugin,
             EditorPlugin,
         )).run();
 }
@@ -34,7 +37,7 @@ impl Plugin for EditorPlugin {
                 spawn_cells,
                 spawn_light,
                 spawn_camera,
-            ).chain())
-            .add_systems(Update,  rotate_camera);
+            ));
+            //.add_systems(Update,  rotate_camera);
     }
 }

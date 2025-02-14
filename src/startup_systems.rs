@@ -1,4 +1,8 @@
+use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
+use bevy::render::mesh::Indices;
+use bevy::render::mesh::PrimitiveTopology;
+use bevy_panorbit_camera::PanOrbitCamera;
 //use bevy::render::mesh::Indices;
 //use bevy::render::mesh::PrimitiveTopology;
 //use bevy::render::render_asset::RenderAssetUsages;
@@ -10,14 +14,24 @@ use crate::CellTemplates;
 
 pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
 
-    let mesh_handle = meshes.add(Sphere::new(0.5));
+    //let mesh_handle = meshes.add(Sphere::new(0.5));
+    let mesh_info = grid.cell_mesh();
+    let mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default())
+        .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, mesh_info.vertices)
+        .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_info.normals)
+        .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, mesh_info.uvs)
+        .with_inserted_indices(Indices::U16(mesh_info.indices));
+
+    let mesh_handle = meshes.add(mesh);
+
     let default_material = materials.add(StandardMaterial {
-        base_color: Color::linear_rgba(1.0, 1.0, 1.0, 0.0),
-        alpha_mode: AlphaMode::AlphaToCoverage,
+        base_color: Color::linear_rgba(1.0, 1.0, 1.0, 0.1),
+        alpha_mode: AlphaMode::Add,
         ..default()
     });
     let hovered_material = materials.add(StandardMaterial {
-        base_color: Color::WHITE,
+        base_color: Color::linear_rgba(1.0, 1.0, 1.0, 0.5),
+        alpha_mode: AlphaMode::Add,
         ..default()
     });
     
@@ -32,9 +46,9 @@ pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<A
         let transform = Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32);
         let cell_component = CellComponent::with_coords(cell_key);
         let mut spawn_commands = commands
-            .spawn((transform, cell_component, MeshMaterial3d(hovered_material.clone()), Mesh3d(mesh_handle.clone())));
+            .spawn((transform, cell_component, MeshMaterial3d(default_material.clone()), Mesh3d(mesh_handle.clone())));
 
-        spawn_commands.observe(paint_grid);
+        spawn_commands.observe(paint_grid).observe(highlight_cells).observe(un_highlight_cells);
         
         //let entiy = spawn_commands.id();
         //grid.set_entity(cell_key, entiy);
@@ -99,5 +113,5 @@ pub fn spawn_light(mut commands: Commands) {
 pub fn spawn_camera(mut commands: Commands) {
     let transform = Transform::from_xyz(0.0, 7.0, 22.0)
         .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
-    commands.spawn((Camera3d::default(), transform));
+    commands.spawn((PanOrbitCamera::default(), transform));
 }
