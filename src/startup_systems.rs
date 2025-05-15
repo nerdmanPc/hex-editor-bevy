@@ -3,13 +3,9 @@ use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::mesh::PrimitiveTopology;
 use bevy_panorbit_camera::PanOrbitCamera;
-//use bevy::render::mesh::Indices;
-//use bevy::render::mesh::PrimitiveTopology;
-//use bevy::render::render_asset::RenderAssetUsages;
-
 use crate::grid::*;
 use crate::components::*;
-use crate::update_systems::*;
+use crate::picking_systems::*;
 use crate::CellTemplates;
 
 pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {

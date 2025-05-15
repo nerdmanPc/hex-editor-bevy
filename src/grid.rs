@@ -8,13 +8,15 @@ pub use hexx::{
     MeshInfo,
 };
 use hexx::*;
+use serde::{Serialize, Deserialize};
+
 mod cell_entry; pub use cell_entry::*;
 
 //Stores layout and adjacency information
-#[derive(Resource, Clone, Debug)]
+#[derive(Resource, Clone, Debug, Serialize, Deserialize)]
 pub struct Grid {
-    layout: HexLayout,
     height: f32,
+    layout: HexLayout,
     cells: HashMap<Hex, TerrainCell>,
 }
 
@@ -105,9 +107,9 @@ impl Grid {
     }
 
     pub fn cell_mesh(&self) -> MeshInfo {
-        ColumnMeshBuilder::new(&self.layout, 32.0 * self.height)
+        ColumnMeshBuilder::new(&self.layout, 1.0 * self.height)
             .without_bottom_face()
-            .with_offset(Vec3 { x: 0.0, y: -32.0 * self.height, z: 0.0 })
+            .with_offset(Vec3 { x: 0.0, y: -1.0 * self.height, z: 0.0 })
             .build()
     }
 

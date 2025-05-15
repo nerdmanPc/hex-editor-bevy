@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-#[derive(Clone, Copy, Debug)]
+use serde::{Serialize, Deserialize};
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct TerrainCell {
     //entity: Option<Entity>,
     height: i32,

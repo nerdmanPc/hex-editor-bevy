@@ -34,11 +34,11 @@ pub fn un_highlight_cells(hover_event: Trigger<Pointer<Out>>, materials: Res<Cel
     *material = MeshMaterial3d(materials.default_material.clone());
 }
 
-pub fn _rotate_camera(input: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Transform, With<Camera3d>>) {
+/*pub fn _rotate_camera(input: Res<ButtonInput<KeyCode>>, mut query: Query<&mut Transform, With<Camera3d>>) {
     let rotate_left = input.just_pressed(KeyCode::ArrowLeft) as i32 as f32;
     let rotate_right = input.just_pressed(KeyCode::ArrowRight) as i32 as f32;
     let angle = (rotate_right- rotate_left) * 1./3. * PI;
     for mut transform in &mut query {
         transform.rotate_around(Vec3 {x: 0.0, y: 0.0, z: 0.0}, Quat::from_rotation_y(angle as f32));
     }
-}
+}*/

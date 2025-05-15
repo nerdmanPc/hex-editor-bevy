@@ -1,10 +1,12 @@
 use bevy::prelude::*;
+use bevy_egui::EguiPlugin;
 use bevy_panorbit_camera::PanOrbitCameraPlugin;
 //use bevy_mod_picking::prelude::*;
 
 mod startup_systems; 
 use startup_systems::*;
-mod update_systems; use update_systems::*;
+mod picking_systems;
+mod ui; use ui::*;
 mod grid; use grid::*;
 
 mod components;
@@ -16,7 +18,8 @@ fn main() {
             DefaultPlugins,
             MeshPickingPlugin,
             PanOrbitCameraPlugin,
-            EditorPlugin,
+            HexEditorPlugin,
+            EguiPlugin,
         )).run();
 }
 
@@ -26,18 +29,19 @@ struct CellTemplates {
     pub hovered_material: Handle<StandardMaterial>,
 }
 
-pub struct EditorPlugin;
+pub struct HexEditorPlugin;
 
-impl Plugin for EditorPlugin {
+impl Plugin for HexEditorPlugin {
     fn build(&self, app: &mut App) {
         let mut empty_grid = Grid::default();
         empty_grid.make_hex([0, 0], 3); 
         app.insert_resource(empty_grid)
+            .insert_resource(FilePicker::default())
             .add_systems(Startup, (
                 spawn_cells,
                 spawn_light,
                 spawn_camera,
-            ));
-            //.add_systems(Update,  rotate_camera);
+            ))
+            .add_systems(Update,  draw_ui);
     }
 }
