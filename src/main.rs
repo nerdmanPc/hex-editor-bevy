@@ -5,11 +5,13 @@ use bevy_panorbit_camera::PanOrbitCameraPlugin;
 
 mod startup_systems; 
 use startup_systems::*;
-mod picking_systems;
 mod ui; use ui::*;
 mod grid; use grid::*;
 
+mod picking_systems;
 mod components;
+mod commands;
+mod common_resources;
 
 
 fn main() {
@@ -23,12 +25,6 @@ fn main() {
         )).run();
 }
 
-#[derive(Resource)]
-struct CellTemplates {
-    pub default_material: Handle<StandardMaterial>,
-    pub hovered_material: Handle<StandardMaterial>,
-}
-
 pub struct HexEditorPlugin;
 
 impl Plugin for HexEditorPlugin {
@@ -38,9 +34,9 @@ impl Plugin for HexEditorPlugin {
         app.insert_resource(empty_grid)
             .insert_resource(FilePicker::default())
             .add_systems(Startup, (
-                spawn_cells,
-                spawn_light,
-                spawn_camera,
+                init_cells,
+                init_light,
+                init_camera,
             ))
             .add_systems(Update,  draw_ui);
     }

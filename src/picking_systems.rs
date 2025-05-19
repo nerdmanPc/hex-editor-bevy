@@ -1,10 +1,9 @@
 
-use std::f32::consts::PI;
 use bevy::prelude::*;
 
 use crate::grid::*;
 use crate::components::*;
-use crate::CellTemplates;
+use crate::common_resources::CellTemplates;
 
 pub fn paint_grid(click: Trigger<Pointer<Click>>, mut grid: ResMut<Grid>, mut query: Query<(&mut CellComponent, &mut Transform)>) {
     let query_result = query.get_mut(click.entity());

@@ -3,7 +3,7 @@ use bevy_egui::{
     EguiContexts,
 };
 
-use bevy::prelude::*;
+use bevy::{prelude::*};
 use egui_file::{DialogType, FileDialog};
 use ciborium::{
     from_reader,
@@ -12,12 +12,21 @@ use ciborium::{
 
 use std::fs::File;
 
-use crate::grid::*;
+use crate::{
+    commands::*, common_resources::CellTemplates, components::*, grid::*
+};
 
 #[derive(Resource, Default)]
 pub struct FilePicker(Option<FileDialog>);
 
-pub fn draw_ui(mut ctx: EguiContexts, mut file_dialog: ResMut<FilePicker>, mut grid: ResMut<Grid>) {
+pub fn draw_ui(
+    mut commands: Commands, 
+    cell_template: Res<CellTemplates>,
+    mut grid: ResMut<Grid>, 
+    cell_components: Query<(Entity, &CellComponent)>,
+    mut ctx: EguiContexts, 
+    mut file_dialog: ResMut<FilePicker>, 
+){
     let mut clicked_new = false;
     let mut clicked_load = false;
     let mut clicked_save = false;
@@ -39,7 +48,10 @@ pub fn draw_ui(mut ctx: EguiContexts, mut file_dialog: ResMut<FilePicker>, mut g
         dialog.open();
         *file_dialog = FilePicker(Some(dialog));
     } else if clicked_new {
-        todo!()
+        let grid_radius = 16;
+        let mesh_handle = &cell_template.mesh;
+        let default_material = &cell_template.default_material;
+        *grid = new_grid(grid_radius, &mut commands, mesh_handle, default_material, &cell_components)
     }
 
     if let FilePicker(Some(dialog)) = &mut (*file_dialog) {
@@ -47,12 +59,10 @@ pub fn draw_ui(mut ctx: EguiContexts, mut file_dialog: ResMut<FilePicker>, mut g
         if let Some(path) = dialog.path() {
             match dialog.dialog_type() {
                 DialogType::OpenFile if dialog.selected() => {
-                    let file =  File::open(path).expect("Failed to open file!");
-                    *grid = from_reader(file).expect("Failed deserialize grid!");
+                    *grid = load_grid(path, &mut commands, &cell_components, &cell_template.mesh, &cell_template.default_material);
                 }
                 DialogType::SaveFile if dialog.selected() => {
-                    let file =  File::create(path).expect("Failed to save file!");
-                    into_writer( &(*grid), file).expect("Failed to serialize grid!");
+                    save_grid(path, &grid);
                 }
                 _ => {}
             }

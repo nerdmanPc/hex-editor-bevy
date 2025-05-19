@@ -3,23 +3,26 @@ use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::mesh::PrimitiveTopology;
 use bevy_panorbit_camera::PanOrbitCamera;
+
 use crate::grid::*;
 use crate::components::*;
 use crate::picking_systems::*;
-use crate::CellTemplates;
+use crate::commands::*;
+use crate::common_resources::CellTemplates;
 
-pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+pub fn init_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
 
-    //let mesh_handle = meshes.add(Sphere::new(0.5));
-    let mesh_info = grid.cell_mesh();
-    let mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default())
-        .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, mesh_info.vertices)
-        .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_info.normals)
-        .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, mesh_info.uvs)
-        .with_inserted_indices(Indices::U16(mesh_info.indices));
+    let mesh_handle = create_cell_mesh(&grid, &mut meshes);
+    let (default_material, hovered_material) = create_cell_materials(&mut materials);
+    commands.insert_resource(CellTemplates{
+        default_material: default_material.clone(),
+        hovered_material: hovered_material.clone(),
+        mesh: mesh_handle.clone(),
+    });
+    create_cells(&mut commands, &grid, &mesh_handle, &default_material);
+}
 
-    let mesh_handle = meshes.add(mesh);
-
+fn create_cell_materials(materials: &mut ResMut<Assets<StandardMaterial>>) -> (Handle<StandardMaterial>, Handle<StandardMaterial>) {
     let default_material = materials.add(StandardMaterial {
         base_color: Color::linear_rgba(1.0, 1.0, 1.0, 0.1),
         alpha_mode: AlphaMode::Add,
@@ -30,25 +33,18 @@ pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<A
         alpha_mode: AlphaMode::Add,
         ..default()
     });
-    
-    commands.insert_resource(CellTemplates{
-        default_material: default_material.clone(),
-        hovered_material: hovered_material.clone(),
-    });
-    
-    let cell_keys: Vec<Hex> = grid.cell_keys().collect();
-    for cell_key in cell_keys {
-        let world_coord = grid.hex_to_point(cell_key);
-        let transform = Transform::from_xyz(world_coord.x as f32, 0.0, world_coord.y as f32);
-        let cell_component = CellComponent::with_coords(cell_key);
-        let mut spawn_commands = commands
-            .spawn((transform, cell_component, MeshMaterial3d(default_material.clone()), Mesh3d(mesh_handle.clone())));
+    (default_material, hovered_material)
+}
 
-        spawn_commands.observe(paint_grid).observe(highlight_cells).observe(un_highlight_cells);
-        
-        //let entiy = spawn_commands.id();
-        //grid.set_entity(cell_key, entiy);
-    }
+fn create_cell_mesh(grid: &Res<Grid>, meshes: &mut ResMut<Assets<Mesh>>) -> Handle<Mesh> {
+    let mesh_info = grid.cell_mesh();
+    let mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default())
+        .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, mesh_info.vertices)
+        .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_info.normals)
+        .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, mesh_info.uvs)
+        .with_inserted_indices(Indices::U16(mesh_info.indices));
+    let mesh_handle = meshes.add(mesh);
+    mesh_handle
 }
 
 /*pub fn spawn_tiles(mut commands: Commands, grid: ResMut<Grid>, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
@@ -94,7 +90,7 @@ pub fn spawn_cells(mut commands: Commands, grid: Res<Grid>, mut meshes: ResMut<A
     }
 }*/
 
-pub fn spawn_light(mut commands: Commands) {
+pub fn init_light(mut commands: Commands) {
     let point_light = PointLight {
         shadows_enabled: true,
         intensity: 10_000_000.,
@@ -106,7 +102,7 @@ pub fn spawn_light(mut commands: Commands) {
     commands.spawn((point_light, transform));
 }
 
-pub fn spawn_camera(mut commands: Commands) {
+pub fn init_camera(mut commands: Commands) {
     let transform = Transform::from_xyz(0.0, 7.0, 22.0)
         .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
     commands.spawn((PanOrbitCamera::default(), transform));

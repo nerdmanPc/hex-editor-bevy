@@ -46,8 +46,9 @@ impl Grid {
         instance
     }
 
-    pub fn make_hex(&mut self, center: impl Into<Hex>, size: i32) -> &mut Self {
+    pub fn make_hex(&mut self, center: impl Into<Hex>, size: u16) -> &mut Self {
         let center: Hex = center.into();
+        let size = size as i32;
         //let mut instance = Self::default();
         for q in -size ..= size {
             for r in -size ..= size {
