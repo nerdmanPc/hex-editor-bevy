@@ -1,5 +1,3 @@
-use bevy::prelude::*;
-
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -27,10 +25,4 @@ impl TerrainCell {
     pub fn height(&self) -> i32 {
         self.height
     }
-}
-
-pub enum ReliefType {
-    Flat,
-    Hill,
-    Cliff,
 }

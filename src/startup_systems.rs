@@ -5,8 +5,6 @@ use bevy::render::mesh::PrimitiveTopology;
 use bevy_panorbit_camera::PanOrbitCamera;
 
 use crate::grid::*;
-use crate::components::*;
-use crate::picking_systems::*;
 use crate::commands::*;
 use crate::common_resources::CellTemplates;
 
