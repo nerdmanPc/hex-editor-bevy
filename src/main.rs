@@ -33,6 +33,7 @@ impl Plugin for HexEditorPlugin {
         empty_grid.make_hex([0, 0], 3); 
         app.insert_resource(empty_grid)
             .insert_resource(FilePicker::default())
+            .insert_resource(CreationForm::default())
             .add_systems(Startup, (
                 init_cells,
                 init_light,

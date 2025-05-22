@@ -7,11 +7,17 @@ use bevy::{prelude::*};
 use egui_file::{DialogType, FileDialog};
 
 use crate::{
-    commands::*, common_resources::CellTemplates, components::*, grid::*
+    commands::*, common_resources::CellTemplates, components::*, grid::*,
 };
 
 #[derive(Resource, Default)]
 pub struct FilePicker(Option<FileDialog>);
+
+#[derive(Resource, Default)]
+pub struct CreationForm{
+    pub open: bool,
+    pub radius: u16,
+}
 
 pub fn draw_ui(
     mut commands: Commands, 
@@ -20,6 +26,7 @@ pub fn draw_ui(
     cell_components: Query<(Entity, &CellComponent)>,
     mut ctx: EguiContexts, 
     mut file_dialog: ResMut<FilePicker>, 
+    mut create_dialog: ResMut<CreationForm>
 ){
     let mut clicked_new = false;
     let mut clicked_load = false;
@@ -34,32 +41,41 @@ pub fn draw_ui(
             })
         });
     if clicked_load {
-        let mut dialog = FileDialog::open_file(None);
-        dialog.open();
-        *file_dialog = FilePicker(Some(dialog));
+        let mut inner_dialog = FileDialog::open_file(None);
+        inner_dialog.open();
+        *file_dialog = FilePicker(Some(inner_dialog));
     } else if clicked_save {
-        let mut dialog = FileDialog::save_file(None);
-        dialog.open();
-        *file_dialog = FilePicker(Some(dialog));
+        let mut inner_dialog = FileDialog::save_file(None);
+        inner_dialog.open();
+        *file_dialog = FilePicker(Some(inner_dialog));
     } else if clicked_new {
-        let grid_radius = 16;
-        let mesh_handle = &cell_template.mesh;
-        let default_material = &cell_template.default_material;
-        *grid = new_grid(grid_radius, &mut commands, mesh_handle, default_material, &cell_components)
+        create_dialog.open = true;
+    }
+    if create_dialog.open {
+        egui::Window::new("New Grid").show(ctx.ctx_mut(), |ui| {
+            ui.label("Grid Radius");
+            ui.add(egui::Slider::new(&mut create_dialog.radius, 1..=32));
+            if ui.button("Create").clicked() {
+                let grid_radius = create_dialog.radius;
+                *grid = new_grid(grid_radius, &mut commands, &cell_template.mesh, &cell_template.default_material, &cell_components);
+                create_dialog.open = false;
+            }
+        });
     }
 
-    if let FilePicker(Some(dialog)) = &mut (*file_dialog) {
-        dialog.show(ctx.ctx_mut());
-        if let Some(path) = dialog.path() {
-            match dialog.dialog_type() {
-                DialogType::OpenFile if dialog.selected() => {
+    if let FilePicker(Some(inner_dialog)) = &mut (*file_dialog) {
+        inner_dialog.show(ctx.ctx_mut());
+        if let Some(path) = inner_dialog.path() {
+            match inner_dialog.dialog_type() {
+                DialogType::OpenFile if inner_dialog.selected() => {
                     *grid = load_grid(path, &mut commands, &cell_components, &cell_template.mesh, &cell_template.default_material);
                 }
-                DialogType::SaveFile if dialog.selected() => {
+                DialogType::SaveFile if inner_dialog.selected() => {
                     save_grid(path, &grid);
                 }
                 _ => {}
             }
         }
     }
+
 }

@@ -87,23 +87,23 @@ impl Grid {
         //print!("Cell height after: {}\n", cell.height);
     }
 
-    pub fn hex_adjacent(hex: impl Into<Hex>, neighbor_id: u8) -> Hex {
+    pub fn _hex_adjacent(hex: impl Into<Hex>, neighbor_id: u8) -> Hex {
         if neighbor_id > 5 { panic!("Invalid hex neighbor!") }
         let hex = hex.into();
-        hex + Self::hex_direction(neighbor_id)
+        hex + Self::_hex_direction(neighbor_id)
         //HexDirection::neighbor(hex, neighbor_id as i32)
     }
 
-    pub fn hex_direction(direction_id: u8) -> Hex {
+    pub fn _hex_direction(direction_id: u8) -> Hex {
         if direction_id > 5 { panic!("Invalid direction!") }
         EdgeDirection::ALL_DIRECTIONS[direction_id as usize].into()
         //HexDirection::direction(direction_id as i32)
     }
 
-    pub fn has_neighbor(&self, hex: impl Into<Hex>, neighbor_id: u8) -> bool {
+    pub fn _has_neighbor(&self, hex: impl Into<Hex>, neighbor_id: u8) -> bool {
         if neighbor_id > 5 { panic!("Invalid hex neighbor!") }
         let hex = hex.into();
-        let adjacent_key = Self::hex_adjacent(hex, neighbor_id);//HexDirection::neighbor(hex, neighbor_id as i32);
+        let adjacent_key = Self::_hex_adjacent(hex, neighbor_id);//HexDirection::neighbor(hex, neighbor_id as i32);
         self.cells.contains_key(&adjacent_key)
     }
 
