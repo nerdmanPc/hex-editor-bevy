@@ -1,11 +1,11 @@
 [package]
 name = "hex-editor-bevy"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-bevy = "0.15.*"
-bevy_egui = "0.33.*"
+bevy = "0.16.*"
+bevy_egui = "0.34.*"
 bevy_panorbit_camera = { version = "0.26.*", features = ["bevy_egui"] }
 ciborium = "0.2.*"
 egui_file = "0.22.*"

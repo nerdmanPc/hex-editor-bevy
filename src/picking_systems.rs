@@ -6,7 +6,7 @@ use crate::components::*;
 use crate::common_resources::CellTemplates;
 
 pub fn paint_grid(click: Trigger<Pointer<Click>>, mut grid: ResMut<Grid>, mut query: Query<(&mut CellComponent, &mut Transform)>) {
-    let query_result = query.get_mut(click.entity());
+    let query_result = query.get_mut(click.target());
     let (grid_cell, mut transform) = query_result.unwrap();
     match click.button {
         PointerButton::Primary => { 
@@ -22,13 +22,13 @@ pub fn paint_grid(click: Trigger<Pointer<Click>>, mut grid: ResMut<Grid>, mut qu
 }
 
 pub fn highlight_cells(hover_event: Trigger<Pointer<Over>>, materials: Res<CellTemplates>, mut query: Query<&mut MeshMaterial3d<StandardMaterial>>) {
-    let query_result = query.get_mut(hover_event.entity());
+    let query_result = query.get_mut(hover_event.target());
     let mut material = query_result.unwrap();
     *material = MeshMaterial3d(materials.hovered_material.clone());
 }
 
 pub fn un_highlight_cells(hover_event: Trigger<Pointer<Out>>, materials: Res<CellTemplates>, mut query: Query<&mut MeshMaterial3d<StandardMaterial>>) {
-    let query_result = query.get_mut(hover_event.entity());
+    let query_result = query.get_mut(hover_event.target());
     let mut material = query_result.unwrap();
     *material = MeshMaterial3d(materials.default_material.clone());
 }

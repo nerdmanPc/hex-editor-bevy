@@ -21,7 +21,7 @@ fn main() {
             MeshPickingPlugin,
             PanOrbitCameraPlugin,
             HexEditorPlugin,
-            EguiPlugin,
+            EguiPlugin {enable_multipass_for_primary_context: false},
         )).run();
 }
 
