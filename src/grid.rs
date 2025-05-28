@@ -11,6 +11,7 @@ use hexx::*;
 use serde::{Serialize, Deserialize};
 
 mod cell_entry; pub use cell_entry::*;
+mod brush; pub use brush::*;
 
 //Stores layout and adjacency information
 #[derive(Resource, Clone, Debug, Serialize, Deserialize)]
@@ -85,6 +86,22 @@ impl Grid {
         //print!("Cell height before: {}\n", cell.height);
         cell.add_height(delta_height);
         //print!("Cell height after: {}\n", cell.height);
+    }
+
+    pub fn cells_in_hexagon<T: Into<Hex>>(pivot_cell: T, radius: u8) -> impl Iterator<Item = Hex> + use<T> {
+        let pivot_cell = pivot_cell.into();
+        hexx::shapes::hexagon(pivot_cell, radius as u32)
+    }
+
+    pub fn apply_brush<T: Into<Hex>>(&mut self, pivot_cell: T, brush: &Brush) {
+        let pivot_cell = pivot_cell.into();
+        let increment = brush.delta_height as i32;
+        let cells_iter = Self::cells_in_hexagon(pivot_cell, brush.radius);
+        for cell in cells_iter {
+            if let Some(current_cell) = self.cells.get_mut(&cell.clone()) {
+                current_cell.add_height(increment);
+            }
+        }
     }
 
     pub fn _hex_adjacent(hex: impl Into<Hex>, neighbor_id: u8) -> Hex {

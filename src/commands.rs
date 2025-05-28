@@ -39,14 +39,21 @@ pub fn create_cells(commands: &mut Commands, grid: &Grid, mesh_handle: &Handle<M
         let cell_component = CellComponent::with_coords(cell_key);
         let mut spawn_commands = commands
             .spawn((transform, cell_component, MeshMaterial3d(default_material.clone()), Mesh3d(mesh_handle.clone())));
-        spawn_commands.observe(paint_grid).observe(highlight_cells).observe(un_highlight_cells);
+        spawn_commands.observe(paint_grid).observe(highlight_cells);
     }
 }
 
 fn delete_cells(commands: &mut Commands, cell_components: &Query<(Entity, &CellComponent)>) {
     //let cell_keys = grid.cell_keys();
     for (entity, _cell_component) in cell_components.iter() {
-        commands.entity(entity).despawn_recursive();
+        commands.entity(entity).despawn();
     }
 
+}
+
+pub fn update_cells<'a, 'b>(grid: &Grid, mut cells: &mut Query<(&mut  CellComponent, &mut Transform)>) {
+    for (cell_component, mut transform) in cells {
+        let cell_key = cell_component.hex_coords();
+        transform.translation.y = grid.world_cell_height(cell_key);
+    }
 }

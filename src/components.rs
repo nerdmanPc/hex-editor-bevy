@@ -28,6 +28,10 @@ impl CellComponent {
             hex_coord: position,
         }
     }
+
+    pub fn hex_coords(&self) -> Hex {
+        self.hex_coord
+    }
 }
 
 #[derive(Component, Copy, Clone, Debug)]

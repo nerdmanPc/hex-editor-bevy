@@ -7,11 +7,11 @@ mod startup_systems;
 use startup_systems::*;
 mod ui; use ui::*;
 mod grid; use grid::*;
+mod common_resources; use common_resources::*;
 
 mod picking_systems;
 mod components;
 mod commands;
-mod common_resources;
 
 
 fn main() {
@@ -32,8 +32,9 @@ impl Plugin for HexEditorPlugin {
         let mut empty_grid = Grid::default();
         empty_grid.make_hex([0, 0], 3); 
         app.insert_resource(empty_grid)
-            .insert_resource(FilePicker::default())
+            .insert_resource(FileDialogWrapper::default())
             .insert_resource(CreationForm::default())
+            .insert_resource(Brush::default())
             .add_systems(Startup, (
                 init_cells,
                 init_light,

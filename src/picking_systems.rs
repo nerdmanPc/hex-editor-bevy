@@ -1,30 +1,42 @@
+use std::collections::HashSet;
 
 use bevy::prelude::*;
 
+use crate::commands::update_cells;
 use crate::grid::*;
 use crate::components::*;
-use crate::common_resources::CellTemplates;
+use crate::common_resources::*;
 
-pub fn paint_grid(click: Trigger<Pointer<Click>>, mut grid: ResMut<Grid>, mut query: Query<(&mut CellComponent, &mut Transform)>) {
+pub fn paint_grid(click: Trigger<Pointer<Click>>, mut grid: ResMut<Grid>, brush: Res<Brush>, mut query: Query<(&mut CellComponent, &mut Transform)>) {
     let query_result = query.get_mut(click.target());
-    let (grid_cell, mut transform) = query_result.unwrap();
+    let (grid_cell, _transform) = query_result.unwrap();
+    let mut brush = *brush;
     match click.button {
-        PointerButton::Primary => { 
-            grid.increment_height(*grid_cell, 1);
-            transform.translation.y = grid.world_cell_height(*grid_cell) as f32;
+        PointerButton::Primary => {
+            brush.delta_height = 1;
          }
         PointerButton::Secondary => { 
-            grid.increment_height(*grid_cell, -1);
-            transform.translation.y = grid.world_cell_height(*grid_cell) as f32;
+            brush.delta_height = -1;
          }
         _ => {}
     }
+    grid.apply_brush(*grid_cell, &brush);
+    update_cells(&grid, &mut query);
 }
 
-pub fn highlight_cells(hover_event: Trigger<Pointer<Over>>, materials: Res<CellTemplates>, mut query: Query<&mut MeshMaterial3d<StandardMaterial>>) {
-    let query_result = query.get_mut(hover_event.target());
-    let mut material = query_result.unwrap();
-    *material = MeshMaterial3d(materials.hovered_material.clone());
+pub fn highlight_cells(hover_event: Trigger<Pointer<Over>>, materials: Res<CellTemplates>, brush: Res<Brush>, mut query: Query<(&mut MeshMaterial3d<StandardMaterial>, &CellComponent)>) {
+
+    let query_result = query.get(hover_event.target());
+    let (_material, center_cell) = query_result.unwrap();
+    let cell_keys: HashSet<Hex> = Grid::cells_in_hexagon(center_cell.hex_coords(), brush.radius).collect();
+    for (mut material, cell) in  query.iter_mut() {
+        let cell_key = cell.hex_coords();
+        if cell_keys.contains(&cell_key) {
+            *material = MeshMaterial3d(materials.hovered_material.clone());
+        } else {
+            *material = MeshMaterial3d(materials.default_material.clone());
+        }
+    }
 }
 
 pub fn un_highlight_cells(hover_event: Trigger<Pointer<Out>>, materials: Res<CellTemplates>, mut query: Query<&mut MeshMaterial3d<StandardMaterial>>) {
